@@ -78,7 +78,6 @@
 
             const file = fileInput.files[0];
 
-            // Validate file type
             if (file.type !== "application/pdf") {
                 alert("Only PDF files are allowed.");
                 return;
@@ -86,7 +85,7 @@
 
             const reader = new FileReader();
             reader.onloadend = function () {
-                pdfBase64 = reader.result.split(",")[1]; // Extract Base64 content
+                pdfBase64 = reader.result.split(",")[1];
                 resumeUploaded = true;
                 uploadStatus.innerHTML = "✅ Resume uploaded successfully!";
                 checkReady();
@@ -121,16 +120,16 @@
             const loadingSpinner = document.getElementById("loadingSpinner");
 
             feedbackDiv.innerHTML = "⏳ Uploading and analyzing...";
-            loadingSpinner.style.display = "block"; // Show the loading spinner
+            loadingSpinner.style.display = "block";
 
             try {
-                const response = await fetch("https://script.google.com/macros/s/AKfycbwzwOHE_PGd0YLJA4CFzk57C56pjHyHjug9TQiL-UmodMZ4FlPXpi6Z98gQ9oO6SPbrBQ/exec", {
+                const response = await fetch("https://script.google.com/macros/s/AKfycbyPLuB4Bs5svmcuA4U6o07E3jEMYO8em0sUI8BjY3Sy/dev", {
                     method: "POST",
+                    mode: "cors",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ pdfBase64, jobTitle })
                 });
 
-                // Check if response is okay
                 if (!response.ok) {
                     throw new Error(`HTTP Error! Status: ${response.status}`);
                 }
@@ -148,7 +147,7 @@
                 feedbackDiv.innerHTML = "❌ An error occurred while processing the resume.";
                 alert("Error: " + error.message);
             } finally {
-                loadingSpinner.style.display = "none"; // Hide spinner after request completes
+                loadingSpinner.style.display = "none";
             }
         }
     </script>
