@@ -20,57 +20,87 @@
             margin-top: 10px;
             padding: 10px;
         }
+        #analyzeButton {
+            background-color: gray;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
     <h2>AI Resume Reviewer</h2>
-    
+
     <label>Upload Resume (PDF format only)</label>
     <br>
     <input type="file" id="resumeFile" accept="application/pdf">
-    <br>
+    <button onclick="uploadResume()">Upload Resume</button>
+    <p id="uploadStatus">No file uploaded.</p>
 
     <label>Target Job Title</label>
     <br>
-    <input type="text" id="jobTitle" placeholder="Target Job Title">
+    <input type="text" id="jobTitle" placeholder="Enter your target job title" oninput="checkReady()">
     <br>
 
-    <button onclick="analyzeResume()">Upload & Analyze Resume</button>
+    <button id="analyzeButton" onclick="analyzeResume()" disabled>Analyze Resume</button>
 
     <h3>Feedback:</h3>
     <div id="feedback">Awaiting response...</div>
 
     <script>
-        async function analyzeResume() {
-            const fileInput = document.getElementById("resumeFile");
-            const jobTitle = document.getElementById("jobTitle").value;
-            const feedbackDiv = document.getElementById("feedback");
+        let pdfBase64 = "";
+        let resumeUploaded = false;
+        let jobTitleEntered = false;
 
-            if (!fileInput.files.length || !jobTitle) {
-                alert("Please upload a resume and enter a job title.");
+        function uploadResume() {
+            const fileInput = document.getElementById("resumeFile");
+            const uploadStatus = document.getElementById("uploadStatus");
+
+            if (!fileInput.files.length) {
+                alert("Please select a resume in PDF format.");
                 return;
             }
-
-            feedbackDiv.innerHTML = "Uploading and analyzing...";
 
             const file = fileInput.files[0];
             const reader = new FileReader();
 
-            reader.onloadend = async function() {
-                const pdfBase64 = reader.result.split(",")[1]; // Extract Base64 content
-                const fileName = file.name;
-
-                const response = await fetch("YOUR_GOOGLE_APPS_SCRIPT_WEB_URL", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ pdfBase64, fileName, jobTitle })
-                });
-
-                const data = await response.json();
-                feedbackDiv.innerHTML = data.feedback || "Error processing resume.";
+            reader.onloadend = function () {
+                pdfBase64 = reader.result.split(",")[1]; // Extract Base64 content
+                resumeUploaded = true;
+                uploadStatus.innerHTML = "Resume uploaded successfully!";
+                checkReady();
             };
 
-            reader.readAsDataURL(file); // Convert file to Base64
+            reader.readAsDataURL(file);
+        }
+
+        function checkReady() {
+            jobTitleEntered = document.getElementById("jobTitle").value.trim().length > 0;
+
+            const analyzeButton = document.getElementById("analyzeButton");
+            if (resumeUploaded && jobTitleEntered) {
+                analyzeButton.disabled = false;
+                analyzeButton.style.backgroundColor = "#4CAF50";
+                analyzeButton.style.cursor = "pointer";
+            } else {
+                analyzeButton.disabled = true;
+                analyzeButton.style.backgroundColor = "gray";
+                analyzeButton.style.cursor = "not-allowed";
+            }
+        }
+
+        async function analyzeResume() {
+            const jobTitle = document.getElementById("jobTitle").value;
+            const feedbackDiv = document.getElementById("feedback");
+
+            feedbackDiv.innerHTML = "Uploading and analyzing...";
+
+            const response = await fetch("YOUR_GOOGLE_APPS_SCRIPT_WEB_URL", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ pdfBase64, jobTitle })
+            });
+
+            const data = await response.json();
+            feedbackDiv.innerHTML = data.feedback || "Error processing resume.";
         }
     </script>
 </body>
