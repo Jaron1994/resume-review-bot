@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Reviewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        #feedback {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        input, button {
+            margin-top: 10px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>AI Resume Reviewer</h2>
+    <label>Upload Resume (Text Format Only)</label>
+    <textarea id="resumeText" rows="6" cols="50" placeholder="Paste your resume text here..."></textarea>
+    <br>
+    <label>Target Job Title</label>
+    <input type="text" id="jobTitle" placeholder="Enter your target job title">
+    <br>
+    <button onclick="analyzeResume()">Analyze Resume</button>
+
+    <h3>Feedback:</h3>
+    <div id="feedback">Awaiting response...</div>
+
+    <script>
+        async function analyzeResume() {
+            const resume = document.getElementById("resumeText").value;
+            const jobTitle = document.getElementById("jobTitle").value;
+            const feedbackDiv = document.getElementById("feedback");
+
+            if (!resume || !jobTitle) {
+                alert("Please enter both your resume and a job title.");
+                return;
+            }
+
+            feedbackDiv.innerHTML = "Analyzing...";
+
+            const response = await fetch("YOUR_GOOGLE_APPS_SCRIPT_WEB_URL", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ resume: resume, jobTitle: jobTitle })
+            });
+
+            const data = await response.json();
+            feedbackDiv.innerHTML = data.feedback;
+        }
+    </script>
+</body>
+</html>
