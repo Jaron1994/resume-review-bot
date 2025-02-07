@@ -77,13 +77,24 @@
             }
 
             const file = fileInput.files[0];
-            const reader = new FileReader();
 
+            // Validate file type
+            if (file.type !== "application/pdf") {
+                alert("Only PDF files are allowed.");
+                return;
+            }
+
+            const reader = new FileReader();
             reader.onloadend = function () {
                 pdfBase64 = reader.result.split(",")[1]; // Extract Base64 content
                 resumeUploaded = true;
-                uploadStatus.innerHTML = "Resume uploaded successfully!";
+                uploadStatus.innerHTML = "✅ Resume uploaded successfully!";
                 checkReady();
+            };
+
+            reader.onerror = function () {
+                alert("Error reading file. Please try again.");
+                uploadStatus.innerHTML = "❌ Upload failed.";
             };
 
             reader.readAsDataURL(file);
@@ -109,7 +120,7 @@
             const feedbackDiv = document.getElementById("feedback");
             const loadingSpinner = document.getElementById("loadingSpinner");
 
-            feedbackDiv.innerHTML = "Uploading and analyzing...";
+            feedbackDiv.innerHTML = "⏳ Uploading and analyzing...";
             loadingSpinner.style.display = "block"; // Show the loading spinner
 
             try {
@@ -119,12 +130,25 @@
                     body: JSON.stringify({ pdfBase64, jobTitle })
                 });
 
+                // Check if response is okay
+                if (!response.ok) {
+                    throw new Error(`HTTP Error! Status: ${response.status}`);
+                }
+
                 const data = await response.json();
-                feedbackDiv.innerHTML = data.feedback || "Error processing resume.";
+
+                if (data.feedback) {
+                    feedbackDiv.innerHTML = `<strong>✔ Feedback:</strong> ${data.feedback}`;
+                } else {
+                    throw new Error("Invalid response received. No feedback available.");
+                }
+
             } catch (error) {
-                feedbackDiv.innerHTML = "An error occurred while processing the resume.";
+                console.error("Fetch Error:", error);
+                feedbackDiv.innerHTML = "❌ An error occurred while processing the resume.";
+                alert("Error: " + error.message);
             } finally {
-                loadingSpinner.style.display = "none"; // Hide the loading spinner after the request is completed
+                loadingSpinner.style.display = "none"; // Hide spinner after request completes
             }
         }
     </script>
