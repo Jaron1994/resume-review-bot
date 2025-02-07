@@ -24,38 +24,53 @@
 </head>
 <body>
     <h2>AI Resume Reviewer</h2>
-    <label>Upload Resume (Text Format Only)</label>
-    <textarea id="resumeText" rows="6" cols="50" placeholder="Paste your resume text here..."></textarea>
+    
+    <label>Upload Resume (PDF format only)</label>
     <br>
+    <input type="file" id="resumeFile" accept="application/pdf">
+    <br>
+
     <label>Target Job Title</label>
-    <input type="text" id="jobTitle" placeholder="Enter your target job title">
     <br>
-    <button onclick="analyzeResume()">Analyze Resume</button>
+    <input type="text" id="jobTitle" placeholder="Target Job Title">
+    <br>
+
+    <button onclick="analyzeResume()">Upload & Analyze Resume</button>
 
     <h3>Feedback:</h3>
     <div id="feedback">Awaiting response...</div>
 
     <script>
         async function analyzeResume() {
-            const resume = document.getElementById("resumeText").value;
+            const fileInput = document.getElementById("resumeFile");
             const jobTitle = document.getElementById("jobTitle").value;
             const feedbackDiv = document.getElementById("feedback");
 
-            if (!resume || !jobTitle) {
-                alert("Please enter both your resume and a job title.");
+            if (!fileInput.files.length || !jobTitle) {
+                alert("Please upload a resume and enter a job title.");
                 return;
             }
 
-            feedbackDiv.innerHTML = "Analyzing...";
+            feedbackDiv.innerHTML = "Uploading and analyzing...";
 
-            const response = await fetch("YOUR_GOOGLE_APPS_SCRIPT_WEB_URL", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ resume: resume, jobTitle: jobTitle })
-            });
+            const file = fileInput.files[0];
+            const reader = new FileReader();
 
-            const data = await response.json();
-            feedbackDiv.innerHTML = data.feedback;
+            reader.onloadend = async function() {
+                const pdfBase64 = reader.result.split(",")[1]; // Extract Base64 content
+                const fileName = file.name;
+
+                const response = await fetch("YOUR_GOOGLE_APPS_SCRIPT_WEB_URL", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ pdfBase64, fileName, jobTitle })
+                });
+
+                const data = await response.json();
+                feedbackDiv.innerHTML = data.feedback || "Error processing resume.";
+            };
+
+            reader.readAsDataURL(file); // Convert file to Base64
         }
     </script>
 </body>
