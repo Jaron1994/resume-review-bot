@@ -1,155 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Resume Reviewer</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 50px;
-        }
-        #feedback {
-            margin-top: 20px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            background-color: #f9f9f9;
-        }
-        input, button {
-            margin-top: 10px;
-            padding: 10px;
-        }
-        #analyzeButton {
-            background-color: gray;
-            cursor: not-allowed;
-        }
-        .spinner {
-            display: none;
-            margin: 20px auto;
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #4CAF50;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body>
-    <h2>AI Resume Reviewer</h2>
+async function analyzeResume() {
+    const jobTitle = document.getElementById("jobTitle").value;
+    const feedbackDiv = document.getElementById("feedback");
+    const loadingSpinner = document.getElementById("loadingSpinner");
 
-    <label>Upload Resume (PDF format only)</label>
-    <br>
-    <input type="file" id="resumeFile" accept="application/pdf">
-    <button onclick="uploadResume()">Upload Resume</button>
-    <p id="uploadStatus">No file uploaded.</p>
+    feedbackDiv.innerHTML = "⏳ Uploading and analyzing...";
+    loadingSpinner.style.display = "block"; // Show the loading spinner
 
-    <label>Target Job Title</label>
-    <br>
-    <input type="text" id="jobTitle" placeholder="Enter your target job title" oninput="checkReady()">
-    <br>
+    try {
+        const response = await fetch(https://script.google.com/macros/s/AKfycbx8czAm1R1W6TAnrWI-B579U9ecfSgLG8JITyf66YVx-8xfPeyg4oWf9RbhxZ9lT_Y4ig/exec, {
+            method: "POST",
+            mode: "cors",  // ✅ Enables cross-origin requests
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pdfBase64, jobTitle })
+        });
 
-    <button id="analyzeButton" onclick="analyzeResume()" disabled>Analyze Resume</button>
-
-    <!-- Loading spinner -->
-    <div id="loadingSpinner" class="spinner"></div>
-
-    <h3>Feedback:</h3>
-    <div id="feedback">Awaiting response...</div>
-
-    <script>
-        let pdfBase64 = "";
-        let resumeUploaded = false;
-        let jobTitleEntered = false;
-
-        function uploadResume() {
-            const fileInput = document.getElementById("resumeFile");
-            const uploadStatus = document.getElementById("uploadStatus");
-
-            if (!fileInput.files.length) {
-                alert("Please select a resume in PDF format.");
-                return;
-            }
-
-            const file = fileInput.files[0];
-
-            if (file.type !== "application/pdf") {
-                alert("Only PDF files are allowed.");
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onloadend = function () {
-                pdfBase64 = reader.result.split(",")[1];
-                resumeUploaded = true;
-                uploadStatus.innerHTML = "✅ Resume uploaded successfully!";
-                checkReady();
-            };
-
-            reader.onerror = function () {
-                alert("Error reading file. Please try again.");
-                uploadStatus.innerHTML = "❌ Upload failed.";
-            };
-
-            reader.readAsDataURL(file);
+        if (!response.ok) {
+            throw new Error(`HTTP Error! Status: ${response.status}`);
         }
 
-        function checkReady() {
-            jobTitleEntered = document.getElementById("jobTitle").value.trim().length > 0;
+        const data = await response.json();
 
-            const analyzeButton = document.getElementById("analyzeButton");
-            if (resumeUploaded && jobTitleEntered) {
-                analyzeButton.disabled = false;
-                analyzeButton.style.backgroundColor = "#4CAF50";
-                analyzeButton.style.cursor = "pointer";
-            } else {
-                analyzeButton.disabled = true;
-                analyzeButton.style.backgroundColor = "gray";
-                analyzeButton.style.cursor = "not-allowed";
-            }
+        if (data.feedback) {
+            feedbackDiv.innerHTML = `<strong>✔ Feedback:</strong> ${data.feedback}`;
+        } else {
+            throw new Error("Invalid response received. No feedback available.");
         }
 
-        async function analyzeResume() {
-            const jobTitle = document.getElementById("jobTitle").value;
-            const feedbackDiv = document.getElementById("feedback");
-            const loadingSpinner = document.getElementById("loadingSpinner");
-
-            feedbackDiv.innerHTML = "⏳ Uploading and analyzing...";
-            loadingSpinner.style.display = "block";
-
-            try {
-                const response = await fetch("https://script.google.com/macros/s/AKfycbyPLuB4Bs5svmcuA4U6o07E3jEMYO8em0sUI8BjY3Sy/dev", {
-                    method: "POST",
-                    mode: "cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ pdfBase64, jobTitle })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP Error! Status: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                if (data.feedback) {
-                    feedbackDiv.innerHTML = `<strong>✔ Feedback:</strong> ${data.feedback}`;
-                } else {
-                    throw new Error("Invalid response received. No feedback available.");
-                }
-
-            } catch (error) {
-                console.error("Fetch Error:", error);
-                feedbackDiv.innerHTML = "❌ An error occurred while processing the resume.";
-                alert("Error: " + error.message);
-            } finally {
-                loadingSpinner.style.display = "none";
-            }
-        }
-    </script>
-</body>
-</html>
+    } catch (error) {
+        console.error("Fetch Error:", error);
+        feedbackDiv.innerHTML = "❌ An error occurred while processing the resume.";
+        alert("Error: " + error.message);
+    } finally {
+        loadingSpinner.style.display = "none"; // Hide spinner after request completes
+    }
+}
